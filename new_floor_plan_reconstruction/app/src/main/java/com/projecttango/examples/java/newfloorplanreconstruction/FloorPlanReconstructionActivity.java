@@ -392,6 +392,7 @@ public class FloorPlanReconstructionActivity extends Activity implements Floorpl
         } else {
             mTangoFloorplanner.stopFloorplanning();
             mPauseButton.setText("Resume");
+            FileSaver.savePolygon(mFloorplanView.mPolygons, getApplicationContext(), this);
         }
     }
 

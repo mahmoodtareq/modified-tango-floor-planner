@@ -49,7 +49,7 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
     private static final float SCALE = 100f;
     private static final int INVALID_POINTER_ID = -1;
 
-    private volatile List<TangoPolygon> mPolygons = new ArrayList<>();
+    public volatile List<TangoPolygon> mPolygons = new ArrayList<>();
 
     private Paint mBackgroundPaint;
     private Paint mWallPaint;
