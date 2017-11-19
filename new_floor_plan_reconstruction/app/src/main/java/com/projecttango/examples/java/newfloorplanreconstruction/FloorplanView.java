@@ -95,7 +95,10 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
             while (mIsDrawing) {
                 Canvas canvas = mSurfaceHolder.lockCanvas();
                 if (canvas != null) {
-                    doDraw(canvas);         // implemented down somewhere
+
+                    doDraw(canvas);         /// implemented down somewhere, may be main drawing
+                                            /// happens there, who knows?
+
                     mSurfaceHolder.unlockCanvasAndPost(canvas);
                 }
                 try {
@@ -105,6 +108,9 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
             }
         }
     };
+
+
+    /// This thread draws at 10Hz rate, I wonder where it started?
     private RenderThread mDrawThread;
 
     /**
@@ -119,6 +125,7 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
 
     private DrawingCallback mCallback;
 
+    /// Constructor as it extends SurfaceView
     public FloorplanView(Context context) {
         super(context);
         init(context);
@@ -145,19 +152,29 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
         mMinAreaWall = typedValue.getFloat();
 
         // Pre-create graphics objects.
+
+        /// Wall
         mWallPaint = new Paint();
         mWallPaint.setColor(getResources().getColor(android.R.color.black));
         mWallPaint.setStyle(Paint.Style.STROKE);
         mWallPaint.setStrokeWidth(3);
+
+        /// Floor
         mBackgroundPaint = new Paint();
         mBackgroundPaint.setColor(getResources().getColor(android.R.color.white));
         mBackgroundPaint.setStyle(Paint.Style.FILL);
+
+        /// Explored Space
         mSpacePaint = new Paint();
-        mSpacePaint.setColor(getResources().getColor(R.color.explored_space));
+        mSpacePaint.setColor(getResources().getColor(R.color.explored_space));  // gray
         mSpacePaint.setStyle(Paint.Style.FILL);
+
+        /// Funrniture
         mFurniturePaint = new Paint();
-        mFurniturePaint.setColor(getResources().getColor(R.color.furniture));
+        mFurniturePaint.setColor(getResources().getColor(R.color.furniture));  // blue
         mFurniturePaint.setStyle(Paint.Style.FILL);
+
+        /// That view point marker
         mUserMarkerPaint = new Paint();
         mUserMarkerPaint.setColor(getResources().getColor(R.color.user_marker));
         mUserMarkerPaint.setStyle(Paint.Style.FILL);
@@ -171,6 +188,8 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
         mUserMarkerPath.lineTo(-0.4f * SCALE, -0.5f  * SCALE);
         mUserMarkerPath.lineTo(0.4f  * SCALE, -0.5f * SCALE);
         mUserMarkerPath.lineTo(0, 0);
+
+
         mPanAndZoomMatrix = new Matrix();
         mFixedCameraMatrix = new Matrix();
         mFixedCameraInverse = new Matrix();
@@ -203,7 +222,7 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
             mCallback.onPreDrawing();
         }
 
-        // Erase the previous canvas image.
+        // Erase the previous canvas image. [Holy Ravioli]
         canvas.drawColor(getResources().getColor(android.R.color.white));
 
         // Start drawing from the center of the canvas.
@@ -227,13 +246,14 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
                     break;
                 case TangoPolygon.TANGO_3DR_LAYER_SPACE:
                     // Only draw free space polygons larger than 2 square meter.
-                    // The goal of this is to suppress free space polygons in front of windows.
+                    // The goal of this is to suppress           [NO IDEA]
+                    // free space polygons in front of windows.  [NO IDEA]
                     // Always draw holes (=negative area) independent of surface area.
                     if (polygon.area > 0) {
                         if (largestSpaceDrawn && polygon.area < mMinAreaSpace) {
                             continue;
                         }
-                        largestSpaceDrawn = true;
+                        largestSpaceDrawn = true;         // why this? [NO IDEA]
                     } 
                     paint = mSpacePaint;
                     break;
@@ -255,6 +275,7 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
             float[] p = polygon.vertices2d.get(0);
             // NOTE: We need to flip the Y axis since the polygon data is in Tango start of
             // service frame (Y+ forward) and we want to draw image coordinates (Y+ 2D down).
+            /// This is why there is a minus in front of p[1] [GOT IT]
             path.moveTo(p[0] * SCALE, -1 * p[1] * SCALE);
             for (int i = 1; i < polygon.vertices2d.size(); i++) {
                 float[] point = polygon.vertices2d.get(i);
