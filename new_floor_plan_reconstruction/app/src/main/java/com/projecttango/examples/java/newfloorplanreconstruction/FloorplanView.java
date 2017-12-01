@@ -56,6 +56,8 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
     private Paint mSpacePaint;
     private Paint mFurniturePaint;
     private Paint mUserMarkerPaint;
+    private Paint mDot;
+    private Paint mCorner;
     private ScaleGestureDetector mScaleDetector;
 
     private Path mUserMarkerPath;
@@ -153,9 +155,18 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
 
         // Pre-create graphics objects.
 
+        /// Points
+        mDot = new Paint();
+        mDot.setColor(getResources().getColor(android.R.color.holo_red_light));
+        mDot.setStyle(Paint.Style.FILL);
+
+        mCorner = new Paint();
+        mCorner.setColor(getResources().getColor(android.R.color.holo_blue_dark));
+        mCorner.setStyle(Paint.Style.FILL);
+
         /// Wall
         mWallPaint = new Paint();
-        mWallPaint.setColor(getResources().getColor(android.R.color.black));
+        mWallPaint.setColor(getResources().getColor(R.color.wall));
         mWallPaint.setStyle(Paint.Style.STROKE);
         mWallPaint.setStrokeWidth(3);
 
@@ -271,20 +282,98 @@ public class FloorplanView extends SurfaceView implements SurfaceHolder.Callback
             if (polygon.area < 0.0) {
                 paint = mBackgroundPaint;
             }
+
+
+            /// Modification starts ///
+
+            if(polygon.layer != TangoPolygon.TANGO_3DR_LAYER_WALLS)
+                continue;
+
+            if(polygon.area < 0.1)
+                continue;
+
+//            Path pth = new Path();
+//
+//
+//
+//            canvas.drawPath(pth, paint);
+//
+//            if(polygon.layer == TangoPolygon.TANGO_3DR_LAYER_WALLS)
+//                continue;
+
+            /// Modification ends
+
+
             Path path = new Path();
             float[] p = polygon.vertices2d.get(0);
             // NOTE: We need to flip the Y axis since the polygon data is in Tango start of
             // service frame (Y+ forward) and we want to draw image coordinates (Y+ 2D down).
             /// This is why there is a minus in front of p[1] [GOT IT]
             path.moveTo(p[0] * SCALE, -1 * p[1] * SCALE);
+            canvas.drawCircle(p[0] * SCALE, -1 * p[1] * SCALE, 3, mDot);
+
             for (int i = 1; i < polygon.vertices2d.size(); i++) {
                 float[] point = polygon.vertices2d.get(i);
                 path.lineTo(point[0] * SCALE, -1 * point[1] * SCALE);
+
+                canvas.drawCircle(point[0] * SCALE, -1 * point[1] * SCALE, 3, mDot);
             }
             if (polygon.isClosed) {
                 path.close();
             }
             canvas.drawPath(path, paint);
+
+
+            /// Modification starts
+
+            if(!FloorPlanReconstructionActivity.showMyDraw)
+                continue;
+
+            float RANGE = 0.1f;
+
+            // Select a point and find all points within square root of 'RANGE'.
+            // then merge all those points into one points.
+            // merge to their centroid for now.
+
+            int len = polygon.vertices2d.size();
+
+            boolean[] taken = new boolean[len];
+
+            for(int i = 0; i < len; i++)
+            {
+                if(taken[i]) continue;
+
+                float px = polygon.vertices2d.get(i)[0];
+                float py = -1 * polygon.vertices2d.get(i)[1];
+
+                float n = 1.0f;
+                float sx = px;
+                float sy = py;
+                for(int j = i + 1; j < len; j++)
+                {
+                    if(taken[j]) continue;
+
+                    float qx = polygon.vertices2d.get(j)[0];
+                    float qy = -1 * polygon.vertices2d.get(j)[1];
+
+                    float d = (px - qx) * (px - qx) + (py - qy) * (py - qy);
+
+                    if(d <= RANGE)
+                    {
+                        sx += qx;
+                        sy += qy;
+                        n += 1.0;
+                        taken[j] = true;
+                    }
+                }
+                taken[i] = true;
+                sx = sx * SCALE / n;
+                sy = sy * SCALE / n;
+                canvas.drawCircle(sx, sy, 5, mCorner);
+            }
+
+            /// Modification ends
+
         }
 
         // Draw a user / device marker.

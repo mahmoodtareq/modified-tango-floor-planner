@@ -8,6 +8,7 @@ import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.atap.tango.reconstruction.TangoPolygon;
 
@@ -29,7 +30,7 @@ public class FileSaver {
         try
         {
             File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-            File file = new File(dir, "polygon.txt");
+            File file = new File(dir, "data.txt");
 
             Log.d("Shonku", file.getAbsolutePath() + " >> " + file.isFile());
 
@@ -37,33 +38,23 @@ public class FileSaver {
 
             FileOutputStream fileOutputStream = new FileOutputStream(file);
 
-            //fileOutputStream.write(("Size: " + polygonList.size() + "\n").getBytes());
-            TangoPolygon roomPolygon = polygonList.get(0);
-            double area = -1f;
             for(TangoPolygon polygon: polygonList)
             {
-                //fileOutputStream.write((polygon.toString() + "\n").getBytes());
+                if(polygon.layer != TangoPolygon.TANGO_3DR_LAYER_WALLS) continue;
 
-                if(polygon.layer == TangoPolygon.TANGO_3DR_LAYER_WALLS && polygon.area >= 0.0)
-                {
-                    if(polygon.area > area)
-                    {
-                        area = polygon.area;
-                        roomPolygon = polygon;
-                    }
+                if(polygon.area < 0.1f) continue;
+                fileOutputStream.write(("" + polygon.vertices2d.size() + "\n").getBytes());
+                for (int i = 0; i < polygon.vertices2d.size(); i++) {
+                    float[] p = polygon.vertices2d.get(i);
+                    float x = p[0];
+                    float y = -1 * p[1];
+                    fileOutputStream.write((x + " " + y + "\n").getBytes());
                 }
             }
-
-            Log.d("Shonku", "MaxArea: " + area);
-
-            for (int i = 0; i < roomPolygon.vertices2d.size(); i++) {
-                float[] p = roomPolygon.vertices2d.get(i);
-                float x = p[0];
-                float y = -1 * p[1];
-                fileOutputStream.write((x + ", " + y + "\n").getBytes());
-            }
-
             fileOutputStream.close();
+
+            Toast toast = Toast.makeText(context, "Sucess", Toast.LENGTH_SHORT);
+            toast.show();
 
             Log.d("Shonku", "Success!");
         }

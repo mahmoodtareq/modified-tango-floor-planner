@@ -65,6 +65,9 @@ public class FloorPlanReconstructionActivity extends Activity implements Floorpl
         .DrawingCallback {
     private static final String TAG = FloorPlanReconstructionActivity.class.getSimpleName();
 
+    public static boolean isPaused = false;
+    public static boolean showMyDraw = false;
+
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
     private static final int CAMERA_PERMISSION_CODE = 0;
 
@@ -87,6 +90,8 @@ public class FloorPlanReconstructionActivity extends Activity implements Floorpl
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Log.d("Shonku", "App started " + System.currentTimeMillis());
 
         TypedValue typedValue = new TypedValue();
         getResources().getValue(R.dimen.min_area_space, typedValue, true);
@@ -381,6 +386,7 @@ public class FloorPlanReconstructionActivity extends Activity implements Floorpl
 
     public void onPauseButtonClick(View v) {
         mIsPaused = !mIsPaused;
+        //isPaused = mIsPaused;
         pauseOrResumeFloorplanning(mIsPaused);
     }
 
@@ -392,7 +398,7 @@ public class FloorPlanReconstructionActivity extends Activity implements Floorpl
         } else {
             mTangoFloorplanner.stopFloorplanning();
             mPauseButton.setText("Resume");
-            FileSaver.savePolygon(mFloorplanView.mPolygons, getApplicationContext(), this);
+            //FileSaver.savePolygon(mFloorplanView.mPolygons, getApplicationContext(), this);
         }
     }
 
@@ -484,5 +490,12 @@ public class FloorPlanReconstructionActivity extends Activity implements Floorpl
             Toast.makeText(this, "Java Floorplan Reconstruction Example requires camera permission",
                     Toast.LENGTH_LONG).show();
         }
+    }
+
+    public void onActionBtn(View v)
+    {
+        Toast t = Toast.makeText(getApplicationContext(), "Action Clicked", Toast.LENGTH_LONG);
+        t.show();
+        showMyDraw = !showMyDraw;
     }
 }
